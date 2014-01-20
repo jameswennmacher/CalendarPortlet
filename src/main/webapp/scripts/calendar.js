@@ -28,10 +28,8 @@ if (!upcal.init) {
          * 
          * (NB:  Oddly this ETag business seems to affect different browsers 
          * different ways.  On FireFox, an ETag match seems provide the $.ajax() 
-         * call with valid data;  on Chrome, nothing.)
+         * call with valid data;  on Chrome, nothing.) so we'll manually cache the data and eTag (also see CAP-104).
          */
-        var cache = new Array();
-        
         var dataCache = {};
         var etagCache = {};
     	
@@ -202,10 +200,11 @@ if (!upcal.init) {
                 // Build the URL for fetching events from the portlet
                 var startDateToken = view.get("startDate").replace(/\//g, "");
                 var daysToken = view.get("days");
-                //dont know what this is for..... var refreshToken = (cache[startDateToken] && cache[startDateToken][daysToken]) ? 'false' : 'true';
                 var url = view.get("eventsUrl")
                     .replace(/START/, startDateToken)
                     .replace(/DAYS/, daysToken);
+                // If we have an eTag, send it as a request parameter to the server for it to determine if we have
+                // the data already.
                 if(etagCache[startDateToken] && etagCache[startDateToken][daysToken]) {
                 	var etagToken=etagCache[startDateToken][daysToken];
                     url=url.replace(/ETAG/, etagToken);
