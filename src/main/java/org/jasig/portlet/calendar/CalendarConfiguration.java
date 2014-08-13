@@ -103,5 +103,31 @@ public class CalendarConfiguration {
 	public void setCalendarDefinition(CalendarDefinition definition) {
 		this.calendarDefinition = definition;
 	}
-	
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CalendarConfiguration)) return false;
+
+        CalendarConfiguration that = (CalendarConfiguration) o;
+
+        if (displayed != that.displayed) return false;
+        if (calendarDefinition != null ? !calendarDefinition.equals(that.calendarDefinition) : that.calendarDefinition != null)
+            return false;
+        if (!id.equals(that.id)) return false;
+        if (subscribeId != null ? !subscribeId.equals(that.subscribeId) : that.subscribeId != null) return false;
+
+        return true;
+    }
+
+    // Do not replace with org.apache.commons.lang.builder.HashCodeBuilder without adjusting Hibernate Session or you will get
+    // org.hibernate.LazyInitializationException: failed to lazily initialize a collection of role:
+    // org.jasig.portlet.calendar.PredefinedCalendarDefinition.userConfigurations, no session or session was closed
+    @Override
+    public int hashCode() {
+        int result = id.hashCode();
+        result = 31 * result + (calendarDefinition != null ? calendarDefinition.hashCode() : 0);
+        result = 31 * result + (subscribeId != null ? subscribeId.hashCode() : 0);
+        return result;
+    }
 }

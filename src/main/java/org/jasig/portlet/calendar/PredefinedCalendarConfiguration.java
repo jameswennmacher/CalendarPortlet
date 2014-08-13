@@ -20,7 +20,10 @@
 package org.jasig.portlet.calendar;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * PredefinedCalendarConfiguration represents a user configuration of a built-in
@@ -81,5 +84,32 @@ public class PredefinedCalendarConfiguration extends CalendarConfiguration {
 	    }
 		super.setCalendarDefinition(definition);
 	}
-	
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PredefinedCalendarConfiguration)) return false;
+        if (!super.equals(o)) return false;
+
+        PredefinedCalendarConfiguration that = (PredefinedCalendarConfiguration) o;
+
+        if (!preferences.equals(that.preferences)) return false;
+
+        return true;
+    }
+
+    // Do not replace with org.apache.commons.lang.builder.HashCodeBuilder without adjusting Hibernate Session or you will get
+    // org.hibernate.LazyInitializationException: failed to lazily initialize a collection of role:
+    // org.jasig.portlet.calendar.PredefinedCalendarDefinition.userConfigurations, no session or session was closed
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        Set sortedKeys = new TreeSet(preferences.keySet());
+        Iterator<String> key = sortedKeys.iterator();
+        while (key.hasNext()) {
+            String keyName = key.next();
+            result = 31 * result + preferences.get(keyName).hashCode();
+        }
+        return result;
+    }
 }

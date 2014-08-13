@@ -217,12 +217,12 @@
             el: "#${n}container .upcal-event-details",
             template: _.template($("#event-detail-template").html())
         });
-        
+
         var view = new upcal.CalendarView({
             container: "#${n}container",
             listView: new ListView(),
             detailView: new DetailView(),
-            eventsUrl: '<portlet:resourceURL id="START-DAYS-REFRESH"/>', 
+            eventsUrl: '<portlet:resourceURL id="START_DAYS"><portlet:param name="calendarHash" value="${model.calendarsHashcode}"/></portlet:resourceURL>',
             startDate: '<fmt:formatDate value="${model.startDate}" type="date" pattern="MM/dd/yyyy" timeZone="${ model.timezone }"/>', 
             days: "${ model.days }"
         });

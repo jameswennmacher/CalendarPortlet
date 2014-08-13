@@ -202,9 +202,13 @@ if (!upcal.init) {
                 var refreshToken = (cache[startDateToken] && cache[startDateToken][daysToken]) ? 'false' : 'true';
                 var url = view.get("eventsUrl")
                     .replace(/START/, startDateToken)
-                    .replace(/DAYS/, daysToken)
-                    .replace(/REFRESH/, refreshToken);
-        
+                    .replace(/DAYS/, daysToken);
+                // If we have an eTag, send it as a request parameter to the server for it to determine if we have
+                // the data already.
+//                if(etagCache[startDateToken] && etagCache[startDateToken][daysToken]) {
+//                	var etagToken=etagCache[startDateToken][daysToken];
+//                    url=url.replace(/ETAG/, etagToken);
+//                }
                 $.ajax({
                     url: url,
                     success: function (data) {

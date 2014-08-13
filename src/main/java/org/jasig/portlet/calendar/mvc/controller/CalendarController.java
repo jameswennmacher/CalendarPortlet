@@ -27,6 +27,7 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 import javax.portlet.PortletPreferences;
+import javax.portlet.PortletRequest;
 import javax.portlet.PortletSession;
 import javax.portlet.RenderRequest;
 
@@ -212,11 +213,12 @@ public class CalendarController implements ApplicationContextAware {
 		model.put("colors", colors);
 		model.put("links", links);
 		model.put("hiddenCalendars", hiddenCalendars);
+
+        // Create a hashcode of the displayed calendars to force reloading browser-cached data if the list of
+        // calendars changes.
+        model.put("calendarsHashcode", calculateDisplayedCalendarsHash(request));
 		
-		/*
-		 * Check if we need to disable either the preferences and/or administration links
-		 */
-		
+		// Check if we need to disable either the preferences and/or administration links
         Boolean disablePrefs = Boolean.valueOf(prefs.getValue(PREFERENCE_DISABLE_PREFERENCES, "false"));
         model.put(PREFERENCE_DISABLE_PREFERENCES, disablePrefs);
         Boolean disableAdmin = Boolean.valueOf(prefs.getValue(PREFERENCE_DISABLE_ADMINISTRATION, "false"));
@@ -224,6 +226,37 @@ public class CalendarController implements ApplicationContextAware {
         
 		return new ModelAndView(viewSelector.getCalendarViewName(request), "model", model);
 	}
+
+    /**
+     * Calculate a hashcode based on the calendars displayed by the user to identify calendar configuration changes.
+     * The hashcode is passed to the javascript to identify the current calendar configuration so the browser UI
+     * doesn't use cached data if the user changes their calendar configuration.
+     * @param request
+     * @return
+     */
+    private int calculateDisplayedCalendarsHash(final PortletRequest request) {
+        final PortletSession session = request.getPortletSession();
+        CalendarSet<?> set = calendarSetDao.getCalendarSet(request);
+
+        // For consistency in creating the hashcode value, sort the calendars by name.
+        List<CalendarConfiguration> calendars = new ArrayList<CalendarConfiguration>();
+        calendars.addAll(set.getConfigurations());
+
+        // sort the calendars
+        Collections.sort(calendars, new CalendarConfigurationByNameComparator());
+
+        // get the list of hidden calendars
+        @SuppressWarnings("unchecked")
+        HashMap<Long, String> hiddenCalendars = (HashMap<Long, String>) session.getAttribute("hiddenCalendars");
+
+        int hashcode = 0;
+        for (CalendarConfiguration config : calendars) {
+            if (hiddenCalendars.get(config.getId()) == null) {
+                hashcode = 31 * hashcode + config.hashCode();
+            }
+        }
+        return hashcode;
+    }
 
     private ICalendarSetDao calendarSetDao;
     

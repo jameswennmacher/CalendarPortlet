@@ -95,12 +95,14 @@ public class AjaxCalendarController implements ApplicationContextAware {
 	    
         // Pull parameters out of the resourceId
         final String resourceId = request.getResourceID();
-        final String[] resourceIdTokens = resourceId.split("-");        
+        final String[] resourceIdTokens = resourceId.split("_");
         final String startDate = resourceIdTokens[0];
         final int days = Integer.parseInt(resourceIdTokens[1]);
-        final boolean refresh = resourceIdTokens.length > 2
-                ? Boolean.valueOf(resourceIdTokens[2])
-                : false;
+
+        // request.getETag() always returns null.  See https://issues.apache.org/jira/browse/PLUTO-625
+        // String requestEtag = request.getETag();
+        String requestEtag = request.getProperty("If-None-Match");
+        requestEtag = requestEtag == null ? "" : requestEtag;
 
         final long startTime = System.currentTimeMillis();
         final List<String> errors = new ArrayList<String>();
@@ -193,11 +195,10 @@ public class AjaxCalendarController implements ApplicationContextAware {
 		model.put("errors", errors);
 
 		String etag = String.valueOf(model.hashCode());
-		String requestEtag = request.getETag();
 
 		// if the request ETag matches the hash for this response, send back
 		// an empty response indicating that cached content should be used
-        if (!refresh && request.getETag() != null && etag.equals(requestEtag)) {
+        if (request.getETag() != null && etag.equals(requestEtag)) {
             if (log.isTraceEnabled()) {
                 log.trace("Sending an empty response (due to matched ETag and " 
                             + "refresh=false) for user '" 
@@ -213,8 +214,7 @@ public class AjaxCalendarController implements ApplicationContextAware {
         }
         
         if (log.isTraceEnabled()) {
-            log.trace("Sending a full response for user '" + request.getRemoteUser() 
-                                                    + "' and refresh=" + refresh);
+            log.trace("Sending a full response for user '" + request.getRemoteUser());
         }
 
         // create new content with new validation tag
